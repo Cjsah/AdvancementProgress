@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "advancement-progress",
+  "version": "${version}",
+  "name": "AdvancementProgress",
+  "description": "Shows progress for some advancements",
+  "authors": [
+    "Cjsah"
+  ],
+  "license": "GUN GPL 3.0",
+  "environment": "*",
+  "mixins": [
+    "adv.client.mixins.json"
+  ],
+  "depends": {
+    "minecraft": "*",
+    "fabricloader": "*",
+    "fabric": "*"
+  },
+  "suggests": {
+    "another-mod": "*"
+  }
+}
