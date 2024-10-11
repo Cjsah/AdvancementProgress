@@ -1,10 +1,12 @@
 package net.cjsah.adv.mixin;
 
 import net.cjsah.adv.AdvancementUtil;
+import net.cjsah.adv.Constants;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.advancement.Advancement;
 import net.minecraft.advancement.AdvancementProgress;
+import net.minecraft.advancement.AdvancementRequirements;
+import net.minecraft.advancement.PlacedAdvancement;
 import net.minecraft.advancement.criterion.CriterionProgress;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -14,11 +16,12 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.StringVisitable;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.Language;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -27,62 +30,53 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 import java.util.function.Function;
 
-import static net.minecraft.text.Text.literal;
-import static net.minecraft.text.Text.translatable;
-
 @Environment(EnvType.CLIENT)
 @Mixin(AdvancementWidget.class)
 public abstract class AdvancementWidgetMixin {
-    private static final Text SHIFT = translatable("advancement.shift.title", literal("shift").formatted(Formatting.AQUA, Formatting.ITALIC));
-    private static final Text TITLE = translatable("advancement.shift.need");
     @Shadow @Final private int width;
     @Shadow private AdvancementProgress progress;
-    @Shadow @Final private Advancement advancement;
+    @Shadow @Final private PlacedAdvancement advancement;
     @Shadow protected abstract List<StringVisitable> wrapDescription(Text text, int width);
-    private List<OrderedText> texts;
-    private List<OrderedText> shift;
-    private List<OrderedText> title;
-    private boolean isNormalDesc = true;
-    private boolean isShiftDown = false;
+    @Unique private List<OrderedText> texts;
+    @Unique private List<OrderedText> shift;
+    @Unique private List<OrderedText> title;
+    @Unique private boolean isNormalDesc = true;
+    @Unique private boolean isShiftDown = false;
 
     @Inject(method = "drawTooltip", at = @At("HEAD"))
     private void update(DrawContext context, int originX, int originY, float alpha, int x, int y, CallbackInfo ci) {
         Function<String, String> function = null;
-        this.isNormalDesc = this.progress.isDone() || (function = AdvancementUtil.TO_TRANSLATE.get(this.advancement.getId())) == null;
+        Identifier id = this.advancement.getAdvancementEntry().id();
+        this.isNormalDesc = this.progress.isDone() || (function = AdvancementUtil.TO_TRANSLATE.get(id)) == null;
         this.isShiftDown = InputUtil.isKeyPressed(MinecraftClient.getInstance().getWindow().getHandle(), InputUtil.GLFW_KEY_LEFT_SHIFT);
-        this.shift = this.getOrderedText(SHIFT);
-        this.title = this.getOrderedText(TITLE);
-        if (!isNormalDesc) {
-            assert function != null;
-            MutableText text1 = literal("");
-            boolean depart1 = false;
-            String[][] requirements = ((AccessorAdvancementProgress)this.progress).getRequirements();
-            for (String[] requirement : requirements) {
-                boolean add = true;
-                for (String detail : requirement) {
-                    CriterionProgress criterionProgress = this.progress.getCriterionProgress(detail);
-                    if (criterionProgress != null && criterionProgress.isObtained()) {
-                        add = false;
-                        break;
-                    }
-                }
-                if (add) {
-                    MutableText text2 = literal("");
-                    boolean depart2 = false;
-                    for (String s : requirement) {
-                        if (depart2) text2.append("/");
-                        else depart2 = true;
-                        text2.append(translatable(function.apply(s)));
-                    }
-                    if (depart1) text1.append(", ");
-                    else depart1 = true;
-                    text1.append(text2);
+        this.shift = this.getOrderedText(Constants.SHIFT);
+        this.title = this.getOrderedText(Constants.TITLE);
+        if (this.isNormalDesc) return;
+        assert function != null;
+        MutableText result = Text.literal("");
+        AdvancementRequirements requirements = ((AccessorAdvancementProgress) this.progress).getRequirements();
+        requirement:
+        for (List<String> requirement : requirements.requirements()) {
+            for (String detail : requirement) {
+                CriterionProgress progress = this.progress.getCriterionProgress(detail);
+                if (progress != null && progress.isObtained()) {
+                    continue requirement;
                 }
             }
-            this.texts = this.getOrderedText(text1);
+            MutableText node = Text.literal("");
+            for (String s : requirement) {
+                node.append(Text.translatable(function.apply(s)));
+                node.append("/");
+            }
+            node.getSiblings().removeLast();
+            result.append(node);
+            result.append(", ");
         }
+        result.getSiblings().removeLast();
+        this.texts = this.getOrderedText(result);
     }
 
+    @Unique
     private List<OrderedText> getOrderedText(Text text) {
         return Language.getInstance().reorder(this.wrapDescription(text, this.width - 8));
     }
@@ -109,6 +103,7 @@ public abstract class AdvancementWidgetMixin {
         return getDescriptionLength(list);
     }
 
+    @Unique
     private int getDescriptionLength(List<OrderedText> list) {
         if (this.isNormalDesc) {
             return list.size();

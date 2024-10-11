@@ -7,17 +7,13 @@
   "authors": [
     "Cjsah"
   ],
-  "license": "GUN GPL 3.0",
+  "license": "MIT",
   "environment": "*",
   "mixins": [
-    "adv.client.mixins.json"
+    "adv.mixins.json"
   ],
   "depends": {
     "minecraft": "*",
-    "fabricloader": "*",
-    "fabric": "*"
-  },
-  "suggests": {
-    "another-mod": "*"
+    "fabricloader": "*"
   }
 }
