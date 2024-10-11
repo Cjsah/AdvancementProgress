@@ -14,5 +14,14 @@
   "cat.minecraft.white": "白猫",
   "frog.minecraft.cold": "绿色青蛙",
   "frog.minecraft.temperate": "橙色青蛙",
-  "frog.minecraft.warm": "白色青蛙"
+  "frog.minecraft.warm": "白色青蛙",
+  "wolf.minecraft.ashen": "灰狼",
+  "wolf.minecraft.black": "黑狼",
+  "wolf.minecraft.chestnut": "栗色狼",
+  "wolf.minecraft.pale": "苍狼",
+  "wolf.minecraft.rusty": "赭红狼",
+  "wolf.minecraft.snowy": "雪狼",
+  "wolf.minecraft.spotted": "斑点狼",
+  "wolf.minecraft.striped": "条纹狼",
+  "wolf.minecraft.woods": "森林狼"
 }

@@ -19,6 +19,7 @@ public class AdvancementUtil {
         TO_TRANSLATE.put(Identifier.of("husbandry/bred_all_animals"), str -> "entity." + str.replace(":", "."));
         TO_TRANSLATE.put(Identifier.of("husbandry/leash_all_frog_variants"), str -> "frog." + str.replace(":", "."));
         TO_TRANSLATE.put(Identifier.of("husbandry/complete_catalogue"), str -> "cat." + str.replace(":", "."));
+        TO_TRANSLATE.put(Identifier.of("husbandry/whole_pack"), str -> "wolf." + str.replace(":", "."));
         TO_TRANSLATE.put(Identifier.of("nether/explore_nether"), str -> "biome." + str.replace(":", "."));
     }
 

@@ -13,7 +13,7 @@
     "adv.mixins.json"
   ],
   "depends": {
-    "minecraft": "*",
+    "minecraft": ">=1.21",
     "fabricloader": "*"
   }
 }
