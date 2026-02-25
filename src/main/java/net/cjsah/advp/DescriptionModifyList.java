@@ -42,6 +42,8 @@ public class DescriptionModifyList extends ArrayList<FormattedCharSequence> {
 
     public void updateContents(List<FormattedText> contents) {
         this.contents = Language.getInstance().getVisualOrder(contents);
+        this.showMore = true;
+        this.setDirty();
     }
 
     public void setDirty() {
