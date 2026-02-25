@@ -1,4 +1,4 @@
-package net.cjsah.adv.mixin;
+package net.cjsah.advp.mixin;
 
 import net.minecraft.advancement.AdvancementProgress;
 import net.minecraft.advancement.AdvancementRequirements;

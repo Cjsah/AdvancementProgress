@@ -1,4 +1,4 @@
-package net.cjsah.adv;
+package net.cjsah.advp;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;

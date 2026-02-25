@@ -1,6 +1,6 @@
 {
   "required": true,
-  "package": "net.cjsah.adv.mixin",
+  "package": "net.cjsah.advp.mixin",
   "compatibilityLevel": "JAVA_17",
   "client": [
     "AccessorAdvancementProgress",

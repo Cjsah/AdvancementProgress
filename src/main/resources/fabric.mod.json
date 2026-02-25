@@ -1,19 +1,30 @@
 {
   "schemaVersion": 1,
-  "id": "advancement-progress",
-  "version": "${version}",
-  "name": "AdvancementProgress",
-  "description": "Shows progress for some advancements",
+  "id": "${mod_id}",
+  "version": "${mod_version}",
+  "name": "${mod_name}",
+  "description": "${mod_description}",
   "authors": [
-    "Cjsah"
+    {
+      "name": "Cjsah",
+      "contact": {
+        "homepage": "https://github.com/cjsah"
+      }
+    }
   ],
-  "license": "MIT",
+  "contact": {
+    "homepage": "${mod_homepage}",
+    "issues": "${mod_sources}/issues",
+    "sources": "${mod_sources}"
+  },
+  "license": "${mod_license}",
   "environment": "*",
+  "entrypoints": {
+  },
   "mixins": [
-    "adv.mixins.json"
+    "advancement-progress.mixins.json"
   ],
   "depends": {
-    "minecraft": ">=1.21",
-    "fabricloader": "*"
+    "minecraft": "${minecraft_dependency}"
   }
 }

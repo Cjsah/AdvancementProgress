@@ -1,7 +1,7 @@
-package net.cjsah.adv.mixin;
+package net.cjsah.advp.mixin;
 
-import net.cjsah.adv.AdvancementUtil;
-import net.cjsah.adv.Constants;
+import net.cjsah.advp.AdvancementUtil;
+import net.cjsah.advp.Constants;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.advancement.AdvancementProgress;

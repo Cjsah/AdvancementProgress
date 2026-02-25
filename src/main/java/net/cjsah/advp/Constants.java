@@ -1,4 +1,4 @@
-package net.cjsah.adv;
+package net.cjsah.advp;
 
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
