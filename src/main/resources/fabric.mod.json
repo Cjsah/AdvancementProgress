@@ -18,7 +18,7 @@
     "sources": "${mod_sources}"
   },
   "license": "${mod_license}",
-  "environment": "*",
+  "environment": "client",
   "entrypoints": {
   },
   "mixins": [

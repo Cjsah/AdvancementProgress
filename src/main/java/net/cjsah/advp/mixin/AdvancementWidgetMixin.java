@@ -1,30 +1,30 @@
 package net.cjsah.advp.mixin;
 
-import net.cjsah.advp.AdvancementUtil;
-import net.cjsah.advp.Constants;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
+import net.cjsah.advp.DescriptionModifyList;
+import net.cjsah.advp.ProgressMapping;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.advancement.AdvancementProgress;
-import net.minecraft.advancement.AdvancementRequirements;
-import net.minecraft.advancement.PlacedAdvancement;
-import net.minecraft.advancement.criterion.CriterionProgress;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.advancement.AdvancementWidget;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.OrderedText;
-import net.minecraft.text.StringVisitable;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Language;
+import net.minecraft.advancements.AdvancementNode;
+import net.minecraft.advancements.AdvancementProgress;
+import net.minecraft.advancements.AdvancementRequirements;
+import net.minecraft.advancements.CriterionProgress;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.advancements.AdvancementWidget;
+import net.minecraft.locale.Language;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.util.FormattedCharSequence;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
@@ -34,93 +34,56 @@ import java.util.function.Function;
 @Mixin(AdvancementWidget.class)
 public abstract class AdvancementWidgetMixin {
     @Shadow @Final private int width;
-    @Shadow private AdvancementProgress progress;
-    @Shadow @Final private PlacedAdvancement advancement;
-    @Shadow protected abstract List<StringVisitable> wrapDescription(Text text, int width);
-    @Unique private List<OrderedText> texts;
-    @Unique private List<OrderedText> shift;
-    @Unique private List<OrderedText> title;
-    @Unique private boolean isNormalDesc = true;
-    @Unique private boolean isShiftDown = false;
+    @Shadow @Final private AdvancementNode advancementNode;
+    @Shadow protected abstract List<FormattedText> findOptimalLines(Component component, int width);
+    @Shadow @Final private List<FormattedCharSequence> description;
 
-    @Inject(method = "drawTooltip", at = @At("HEAD"))
-    private void update(DrawContext context, int originX, int originY, float alpha, int x, int y, CallbackInfo ci) {
-        Function<String, String> function = null;
-        Identifier id = this.advancement.getAdvancementEntry().id();
-        this.isNormalDesc = this.progress.isDone() || (function = AdvancementUtil.TO_TRANSLATE.get(id)) == null;
-        this.isShiftDown = InputUtil.isKeyPressed(MinecraftClient.getInstance().getWindow().getHandle(), InputUtil.GLFW_KEY_LEFT_SHIFT);
-        this.shift = this.getOrderedText(Constants.SHIFT);
-        this.title = this.getOrderedText(Constants.TITLE);
-        if (this.isNormalDesc) return;
-        assert function != null;
-        MutableText result = Text.literal("");
-        AdvancementRequirements requirements = ((AccessorAdvancementProgress) this.progress).getRequirements();
+    @Unique private Function<String, String> advp$mapping;
+
+    @Unique
+    private DescriptionModifyList advp$getDescriptionList() {
+        return (DescriptionModifyList) this.description;
+    }
+
+    @WrapOperation(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/locale/Language;getVisualOrder(Ljava/util/List;)Ljava/util/List;"))
+    private List<FormattedCharSequence> redirect(Language instance, List<FormattedText> list, Operation<List<FormattedCharSequence>> original, @Local(name = "j") int width) {
+        List<FormattedCharSequence> origin = original.call(instance, list);
+        this.advp$mapping = ProgressMapping.get(this.advancementNode.holder().id());
+        return new DescriptionModifyList(origin, this.findOptimalLines(ProgressMapping.SHIFT, width), this.findOptimalLines(ProgressMapping.TITLE, width));
+    }
+
+    @Inject(method = "setProgress", at = @At("RETURN"))
+    private void updateProgress(AdvancementProgress progress, CallbackInfo ci) {
+        DescriptionModifyList desc = this.advp$getDescriptionList();
+        if (progress.isDone() || this.advp$mapping == null) {
+            desc.setShowMore(false);
+            return;
+        }
+        MutableComponent component = Component.literal("");
+        AdvancementRequirements requirements = ((AccessorAdvancementProgress) progress).getRequirements();
         requirement:
         for (List<String> requirement : requirements.requirements()) {
+            MutableComponent node = Component.literal("");
             for (String detail : requirement) {
-                CriterionProgress progress = this.progress.getCriterionProgress(detail);
-                if (progress != null && progress.isObtained()) {
+                CriterionProgress criterion = progress.getCriterion(detail);
+                if (criterion != null && criterion.isDone()) {
                     continue requirement;
                 }
-            }
-            MutableText node = Text.literal("");
-            for (String s : requirement) {
-                node.append(Text.translatable(function.apply(s)));
+                node.append(Component.translatable(this.advp$mapping.apply(detail)));
                 node.append("/");
             }
             node.getSiblings().removeLast();
-            result.append(node);
-            result.append(", ");
+            component.append(node);
+            component.append(", ");
         }
-        result.getSiblings().removeLast();
-        this.texts = this.getOrderedText(result);
+        component.getSiblings().removeLast();
+        desc.updateContents(this.findOptimalLines(component, this.width - 8));
     }
 
-    @Unique
-    private List<OrderedText> getOrderedText(Text text) {
-        return Language.getInstance().reorder(this.wrapDescription(text, this.width - 8));
-    }
-
-    @Redirect(method = "drawTooltip", at = @At(value = "INVOKE", target ="Ljava/util/List;size()I", ordinal = 0))
-    private int descriptionHeight1(List<OrderedText> list) {
-        if (this.isNormalDesc) {
-            return list.size();
-        } else return list.size() + this.shift.size();
-    }
-
-    @Redirect(method = "drawTooltip", at = @At(value = "INVOKE", target ="Ljava/util/List;size()I", ordinal = 1))
-    private int descriptionHeight2(List<OrderedText> list) {
-        return getDescriptionLength(list);
-    }
-
-    @Redirect(method = "drawTooltip", at = @At(value = "INVOKE", target ="Ljava/util/List;size()I", ordinal = 2))
-    private int descriptionHeight3(List<OrderedText> list) {
-        return getDescriptionLength(list);
-    }
-
-    @Redirect(method = "drawTooltip", at = @At(value = "INVOKE", target ="Ljava/util/List;size()I", ordinal = 3))
-    private int descriptionHeight4(List<OrderedText> list) {
-        return getDescriptionLength(list);
-    }
-
-    @Unique
-    private int getDescriptionLength(List<OrderedText> list) {
-        if (this.isNormalDesc) {
-            return list.size();
-        } else if (this.isShiftDown) {
-            return list.size() + this.texts.size() + this.title.size();
-        } else return list.size() + this.shift.size();
-    }
-
-    @SuppressWarnings("unchecked")
-    @Redirect(method = "drawTooltip", at = @At(value = "INVOKE", target ="Ljava/util/List;get(I)Ljava/lang/Object;"))
-    private <T> T getDescription(List<T> list, int i) {
-        int length = list.size();
-        if (i < length) return list.get(i);
-        else if (this.isShiftDown) {
-            int titleSize = this.title.size();
-            if (i - length < titleSize) return (T) this.title.get(i - length);
-            else return (T) this.texts.get(i - length - titleSize);
-        } else return (T) this.shift.get(i - length);
+    @Inject(method = "drawHover", at = @At("HEAD"))
+    private void draw(GuiGraphics guiGraphics, int originX, int originY, float alpha, int x, int y, CallbackInfo ci) {
+        DescriptionModifyList desc = this.advp$getDescriptionList();
+        boolean shiftDown = Screen.hasShiftDown();
+        if (desc.isShiftKeyDown() != shiftDown) desc.setShiftKeyDown(shiftDown);
     }
 }
