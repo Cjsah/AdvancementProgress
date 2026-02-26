@@ -11,11 +11,9 @@ preprocess {
     Node mc12101_fabric = createNode("1.21.1-fabric", 1_21_01, "mojang")
     Node mc12104_fabric = createNode("1.21.4-fabric", 1_21_04, "mojang")
     Node mc12109_fabric = createNode("1.21.9-fabric", 1_21_09, "mojang")
-    Node mc12111_fabric = createNode("1.21.11-fabric", 1_21_11, "mojang")
 
     mc12101_fabric.link(mc12104_fabric, null)
     mc12104_fabric.link(mc12109_fabric, null)
-    mc12109_fabric.link(mc12111_fabric, null)
 }
 
 ext {
