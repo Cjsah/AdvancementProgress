@@ -51,7 +51,13 @@ public abstract class AdvancementWidgetMixin {
     }
 
     @WrapOperation(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/locale/Language;getVisualOrder(Ljava/util/List;)Ljava/util/List;"))
-    private List<FormattedCharSequence> redirect(Language instance, List<FormattedText> list, Operation<List<FormattedCharSequence>> original, @Local(name = "j") int width) {
+    private List<FormattedCharSequence> redirect(Language instance, List<FormattedText> list, Operation<List<FormattedCharSequence>> original, @Local(ordinal =
+        //#if MC >= 12104
+        //$$ 2
+        //#else
+        1
+        //#endif
+    ) int width) {
         List<FormattedCharSequence> origin = original.call(instance, list);
         this.advp$mapping = ProgressMapping.get(this.advancementNode.holder().id());
         return new DescriptionModifyList(origin, this.findOptimalLines(ProgressMapping.SHIFT, width), this.findOptimalLines(ProgressMapping.TITLE, width));
