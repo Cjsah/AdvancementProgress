@@ -12,7 +12,6 @@ import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.advancements.AdvancementRequirements;
 import net.minecraft.advancements.CriterionProgress;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.advancements.AdvancementWidget;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
@@ -29,6 +28,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 import java.util.function.Function;
+
+//#if MC >= 12109
+//$$ import net.minecraft.client.Minecraft;
+//#else
+import net.minecraft.client.gui.screens.Screen;
+//#endif
 
 @Environment(EnvType.CLIENT)
 @Mixin(AdvancementWidget.class)
@@ -83,7 +88,12 @@ public abstract class AdvancementWidgetMixin {
     @Inject(method = "drawHover", at = @At("HEAD"))
     private void draw(GuiGraphics guiGraphics, int originX, int originY, float alpha, int x, int y, CallbackInfo ci) {
         DescriptionModifyList desc = this.advp$getDescriptionList();
-        boolean shiftDown = Screen.hasShiftDown();
+        boolean shiftDown =
+            //#if MC >= 12109
+            //$$ Minecraft.getInstance().hasShiftDown();
+            //#else
+            Screen.hasShiftDown();
+            //#endif
         if (desc.isShiftKeyDown() != shiftDown) desc.setShiftKeyDown(shiftDown);
     }
 }
